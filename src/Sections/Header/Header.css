@@ -1,0 +1,50 @@
+header {
+    width: 100%;
+    background-color: var(--mainBlackColor);
+    height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+
+}
+
+header .container .logo {
+    cursor: pointer;
+    transition: 0.1s;
+}
+
+header .container .logo:hover {
+    box-shadow: -2px 1px 5px #eee, 2px 1px 10px #eee;
+}
+
+header .container .logo h1 {
+    border: 1px solid #eee;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 32px;
+}
+
+header .container .logo h1 .colored-logo {
+    color: var(--mainRedColor);
+}
+
+header .container .nav {
+    display: flex;
+    align-items: center;
+}
+
+header .container .nav li {
+    margin-left: 12px;
+    font-size: 18px;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+header .container .nav li:hover {
+    color: var(--mainOrangeColor);
+}
