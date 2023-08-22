@@ -1,0 +1,128 @@
+.bell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+
+.bell .new-notif-count {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background-color: var(--mainRedColor);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+}
+
+.bell:hover .new-notif-count {
+    color: #fff
+}
+
+.bell .notifications {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    z-index: 500;
+    background-color: var(--mainBlackColor);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 400px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+.notifications li {
+    width: 87%;
+    display: flex;
+    align-items: center;
+    border: 1px solid #fff;
+    margin: 10px 25px;
+    padding: 18px 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    color: #fff;
+    position: relative;
+    font-size: 16px !important;
+}
+
+ li .notifications li:hover {
+    background-color: #fff;
+    color: #111
+}
+
+li .notifications li img {
+    width: 70px;
+    height: 70px;
+    margin-right: 15px;
+}
+
+li .notifications li .req-reponse-buttons {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+}
+
+li .notifications li .friend-request-accept,
+li .notifications li .friend-request-reject {
+    margin-left: 3px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+li .notifications li:hover .friend-request-accept,
+li .notifications li:hover .friend-request-reject {
+    background-color: var(--mainBlackColor);
+    color: #fff;
+}
+
+li .notifications li .friend-request-accept:hover
+ {
+    opacity: 0.9;
+    background-color: green;
+}
+
+li .notifications li .friend-request-reject:hover {
+    background-color: var(--mainRedColor);
+}
+
+li .notifications li .friend-request-accept:active,
+li .notifications li .friend-request-reject:active {
+    border: none;
+
+}
+
+.date-time {
+    font-size: 14px;
+}
+
+.old-notif {
+    opacity: 0.8;
+    cursor: auto !important;
+}
+
+
+.old-notif:hover {
+    background-color: var(--mainBlackColor) !important;
+}
+
+
+.notif-btun {
+    border: none;
+    background-color: var(--mainBlackColor);
+    color: #aaa;
+    cursor: auto !important;
+}
+
+.notif-btun:hover {
+    background-color: var(--mainBlackColor) !important;
+}

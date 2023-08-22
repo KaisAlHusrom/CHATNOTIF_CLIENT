@@ -61,6 +61,7 @@ const SignIn = () => {
                 },
                 error => {
                     console.log(error)
+                    setError(error.message)
                 }
             )
             

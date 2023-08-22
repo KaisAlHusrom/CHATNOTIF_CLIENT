@@ -1,17 +1,25 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AuthService from "../../Service/AuthService"
-import { useUserContext } from "../../Components/UserContext"
+import { useUserContext, useFriendsContext } from "../../Components/UserContext"
+import { Chat } from "../../Components"
 import "./Home.css"
+import MessageService from "../../Service/MessageService"
+
+
 
 const Home = () => {
   const navigate = useNavigate()
 
+  const [sendTo, setSendTo] = useState("")
+
   const {userInfo} = useUserContext()
+
+  const {friends} = useFriendsContext()
 
   useEffect(() => {
     !AuthService.IsLogged() && navigate("/signIn")
-    console.log(userInfo)
+    
 
   }, [navigate, userInfo])
   
@@ -24,37 +32,17 @@ const Home = () => {
               <h2>Chats</h2>
             </div>
             <ul className="chats">
-              <li>ahmet</li>
-              <li>kais</li>
+              {friends.map(friend => {
+                return (
+                  <li onClick={() => setSendTo(friend)} key={friend.id}>{friend.userName}</li>
+                )
+              })}
+
+              
             </ul>
           </div>
-          <div className="messages-box">
-            <div className="messages-title">
-              <h2>Ahmet</h2>
-            </div>
-            <ul className="messages">
-              <li className="message me">
-                hello
-                <span className="time">05:18</span>
-              </li>
-              <li className="message ">
-              hello my frien
-                <span className="time">05:19</span>
-              </li>
-              <li className="message me">
-              how are you?
-                <span className="time">05:22</span>
-              </li>
-              <li className="message ">
-              how are you?
-                <span className="time">05:23</span>
-              </li>
-            </ul>
-            <div className="send-message">
-              <input name="message" id="message" />
-              <button>Send</button>
-            </div>
-          </div>
+          <Chat receiverUser={{sendTo, setSendTo}}/>
+          
         </div>
       </div>
     </div>

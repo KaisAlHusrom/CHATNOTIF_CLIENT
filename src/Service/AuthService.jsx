@@ -1,4 +1,6 @@
 import axios from "axios"
+
+
 // import jwt from "jwt-decode"
 
 const API_URL = 'http://localhost:8080/api/v1/auth'
@@ -9,7 +11,7 @@ const SignUp = async (userData) => {
 }
 
 const SignIn = async (userData) => {
-    
+
     const res = await axios.post(API_URL + '/authenticate', userData)
     if (res.data.response.Success) {
         // const decode = jwt(res.data.response.Token)
@@ -21,6 +23,9 @@ const SignIn = async (userData) => {
         localStorage.setItem("user_token", res.data.response.Token)
         localStorage.setItem("user_token_expiration_date", res.data.response.ExpiredAt)
         localStorage.setItem("user_data", JSON.stringify(res.data.response.UserInfo))
+
+        
+
     }
     return res.data
 }

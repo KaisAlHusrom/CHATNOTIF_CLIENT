@@ -9,6 +9,7 @@ header {
 header .container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     color: #fff;
 
 }
@@ -33,6 +34,8 @@ header .container .logo h1 .colored-logo {
     color: var(--mainRedColor);
 }
 
+
+
 header .container .nav {
     display: flex;
     align-items: center;
@@ -48,3 +51,4 @@ header .container .nav li {
 header .container .nav li:hover {
     color: var(--mainOrangeColor);
 }
+

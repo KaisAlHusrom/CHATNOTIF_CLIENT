@@ -1,0 +1,91 @@
+.search-box {
+    width: 400px;
+    position: relative;
+    overflow: visible;
+}
+
+.search-box input {
+    padding: 10px 15px;
+    width: 100%;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    font-size: 18px;
+    transition: 0.3s;
+}
+
+.search-box .search-results {
+    width: 100%;
+    max-height: 300px;
+    overflow: auto;
+    position: absolute;
+    left: 0;
+    top: 50px;
+    z-index: 500;
+    background-color: var(--mainBlackColor);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.search-box .search-results li {
+    width: 87%;
+    display: flex;
+    align-items: center;
+    border: 1px solid #fff;
+    margin: 10px 25px;
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+}
+
+.search-box .search-results li:hover {
+    background-color: #fff;
+    color: #111;
+}
+
+.search-box .search-results li img {
+    width: 50px;
+    height: 50px;
+    margin-right: 15px;
+}
+
+.search-box .search-results li .user-name {
+    font-size: 16px;
+}
+
+.search-box input:focus {
+    border: 2px solid var(--mainRedColor);
+}
+
+.search-box .search-results li .friend-request {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.search-box .search-results li:hover .friend-request {
+    background-color: var(--mainBlackColor);
+    color: #fff;
+}
+
+.search-box .search-results li .friend-request:hover {
+    opacity: 0.9;
+}
+
+.search-box .search-results li .friend-request:active {
+    border: none;
+}
+
+.already-sent {
+    background-color: transparent ;
+    color: #fff;
+    cursor: auto !important;
+}
