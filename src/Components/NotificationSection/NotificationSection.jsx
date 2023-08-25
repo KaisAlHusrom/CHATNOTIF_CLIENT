@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import emptyImage from "./../../Assets/Images/emptyImageProfile.png"
 import "./NotificationSection.css"
 import PropTypes from 'prop-types';
@@ -7,7 +7,22 @@ import FriendRequestService from "../../Service/FriendRequestService";
 import { useFriendsContext, useUserContext, useStompClientContext, useNotificationsContext } from "../UserContext";
 
 const NotificationSection = () => {
+  const notificationBoardRef = useRef(null)
   const [state, setState] = useState(false)
+
+  const handleClickOutside = (event) => {
+    if (notificationBoardRef.current && !notificationBoardRef.current.contains(event.target)) {
+      setState(false)
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+  }, [])
+
   const {userInfo} = useUserContext()
   const {friends} = useFriendsContext()
   const stompClient = useStompClientContext() 
@@ -16,12 +31,12 @@ const NotificationSection = () => {
 
   const handleNotifications = async () => {
     if(state === false) {
-      notifications.forEach(async notification => {
+      await Promise.all(notifications.map(async notification => {
         if (notification.status === "NEW") {
           const request = await FriendRequestService.updateRequestStatusToOld(notification.id)
           stompClient.send(`/api/v1/send-notif`, {}, JSON.stringify(request))
         }
-      })
+      })) 
 
       
 
@@ -84,11 +99,15 @@ const NotificationSection = () => {
 
 
   return (
-    <li className="bell">
+    <li className="bell" ref={notificationBoardRef}>
         <i className="fa-solid fa-bell" onClick={handleNotifications}></i>
         {
-          state && 
-          <ul className="notifications">
+          
+          <ul className="notifications" style={{
+            visibility: state ? "visible" : "hidden",
+            opacity: state ? 1 : 0,
+            transform: `translateY(${state ? '0' : '-10%'})`,
+          }}>
             
             {
               notifications.length !== 0 
@@ -110,10 +129,10 @@ const NotificationSection = () => {
                       {/* {req.status === "NEW" && (<p>NEW</p>)} */}
                       <div className="date-time">
                         <p className="date">
-                        {`${dateObject.getFullYear()}.${dateObject.getMonth() + 1}.${dateObject.getDay()}`}
+                        {`${dateObject.getFullYear()}.${dateObject.getMonth() + 1}.${dateObject.getDate()}`}
                         </p>
                         <p className="time">
-                        {`${dateObject.getHours()}:${dateObject.getMinutes()}`}
+                        {`${dateObject.getHours()}:${dateObject.getMinutes().toString().padStart(2, '0')}`}
                         </p>
                       </div>
                       {req.status === "ACCEPTED" 

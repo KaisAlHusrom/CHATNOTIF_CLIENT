@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom"
 import AuthService from "../../Service/AuthService"
 import {   useState } from "react"
 import { NotificationSection, SearchBox } from "../../Components"
-import { useUserContext } from "../../Components/UserContext"
+import { useStompClientContext, useUserContext } from "../../Components/UserContext"
 
 const Header = () => {
   const {userInfo} = useUserContext()
@@ -12,11 +12,14 @@ const Header = () => {
     return localStorage.getItem("user_token") && new Date(localStorage.getItem("user_token_expiration_date")) > new Date() ?  true : false
   })
 
-
+  const stompClient = useStompClientContext()
 
   const handleSignOut = async () => {
     await AuthService.SignOut()
                       .then(() => {
+                        if(stompClient) {
+                          stompClient.send("/api/v1/authenticate", {}, "Signed Out")
+                        }
                         navigate("/signIn")
                         window.location.reload()
                       }

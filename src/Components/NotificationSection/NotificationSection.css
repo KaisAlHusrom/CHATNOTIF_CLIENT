@@ -36,6 +36,8 @@
     width: 400px;
     max-height: 300px;
     overflow: auto;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+
 }
 
 .notifications li {

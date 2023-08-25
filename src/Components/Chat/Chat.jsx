@@ -5,45 +5,96 @@ import UsersService from "../../Service/UsersService"
 import FriendRequestService from "../../Service/FriendRequestService"
 import { useUserContext, useStompClientContext, useFriendsContext, useNotificationsContext } from "../../Components/UserContext"
 import PropTypes from 'prop-types';
+import emptyImage from "./../../Assets/Images/emptyImageProfile.png"
 
 import "./Chat.css"
 
-const Chat = ({receiverUser}) => {
+const Chat = ({receiverUser, messagesState}) => {
+  const {sendTo, setSendTo} = receiverUser
   const messageInput = useRef()
   const messagesRef = useRef()
+  const [settingBoardIsOpen, setSettingBoardIsOpen] = useState(false);
+  const settingBoardRef = useRef(null);
+
+  //close chat settings board if click outside of it.
+  const handleSettingBoard = () => {
+    setSettingBoardIsOpen(!settingBoardIsOpen)
+  }
+  const handleClickOutside = (event) => {
+        if (settingBoardRef.current && !settingBoardRef.current.contains(event.target)) {
+            setSettingBoardIsOpen(false);
+        }
+  };
+  useEffect(() => {
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+  }, []);
 
   const stompClient = useStompClientContext() 
   const {userInfo} = useUserContext()
   const { setFriends} = useFriendsContext()
   const { setNotifications} = useNotificationsContext()
-
   const [messages, setMessages] = useState([])
+  // let userMessages =  messages[sendTo.userName]
+
+
   useEffect(() => {
+    //move scroll to bottom every message send
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
+
+    //convert the new messages to old when current chat keep open
+    let timer;
+
+    if (receiverUser.sendTo !== "") {
+      const convertNesMessagesToOld = async () => {
+
+        let newMessages = messages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id)
+
+        await Promise.all(newMessages.map(async message => {
+              await MessageService.updateMessageStatusToOld(message.id)
+        }))
+      }
+
+      timer = setTimeout(() => {
+          convertNesMessagesToOld()
+      }, 1000)
+    }
+
+
+  // // Clear the timer if the chat closes or state changes
+  return () => clearTimeout(timer);
+    
   }, [messages])
 
   const [messageContent, setMessageContent] = useState("")
 
-
+  //When open chat box...
   useEffect(() => {
 
      // Scroll to the bottom of the message list
-     if (messagesRef.current) {
+    if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
 
     const fetchMessages = async () => {
-      const allMessages = await MessageService.getMessages(userInfo.id)
+      const allMessages = await MessageService.getMessages(userInfo.id, receiverUser.sendTo.id)
       if (allMessages.success) {
 
         setMessages(allMessages.result)
+
       }
     } 
 
+    
+
 
     if (receiverUser.sendTo !== "") {
+      
+
       fetchMessages()
     }
 
@@ -54,6 +105,10 @@ const Chat = ({receiverUser}) => {
   }, [receiverUser.sendTo])
 
   const onConnected = () => {
+
+    stompClient.subscribe("/user-auth/authenticate", onAuthentication)
+
+
     stompClient.subscribe("/user-message/send-message", onMessageSend)
 
     stompClient.subscribe("/user-notification/send-notif", onNotifSent)
@@ -64,6 +119,14 @@ const Chat = ({receiverUser}) => {
 
   const onError = err => {
     console.log(err)
+  }
+
+
+
+  const onAuthentication = async () => {
+    const friends = await UsersService.GetFriends(userInfo.id)
+    setFriends(friends.result)
+
   }
 
 
@@ -117,11 +180,11 @@ const Chat = ({receiverUser}) => {
   }
 
   const onMessageSend = async (payload) => {
-    console.log("we in response")
     let data = JSON.parse(payload.body)
     if (data.success) {
-      const allMessages = await MessageService.getMessages(userInfo.id)
+      const allMessages = await MessageService.getMessages(data.result.sender.id, data.result.receiver.id)
       if (allMessages.success) {
+        // userMessages.add(data.result)
         setMessages(allMessages.result)
 
         
@@ -139,7 +202,6 @@ const Chat = ({receiverUser}) => {
     if(stompClient) {
       if(messageContent !== "") {
         const res = await MessageService.sendMessage(messageContent, userInfo.id, receiverUser.sendTo.id)
-        console.log(res)
         if(res.success) {
           messageInput.current.value = ""
           stompClient.send("/api/v1/send-message", {}, JSON.stringify(res))
@@ -156,28 +218,60 @@ const Chat = ({receiverUser}) => {
     }
   }
 
+
+
+  const handleRemoveFriend = async (userId, friendWithId) => {
+    if (stompClient) {
+            const result = await UsersService.removeFriend(userId, friendWithId);
+            if(result.success) {
+                stompClient.send(`/api/v1/remove-friend`, {}, JSON.stringify(result))
+            }
+    }
+  }
+
   return (
     <div className="messages-box">
-            <div className="messages-title">
               {receiverUser.sendTo !== ""
-              ? (<h2>{receiverUser.sendTo.userName}</h2>)
-              : (<h2>Wellcome To ChatNotif</h2>)
-              }
+              ? (
+                <div className="messages-title">
+                  <div className="user-info">
+                    <img src={emptyImage} alt="profile" className="profile-image" />
+                    <h2>{receiverUser.sendTo.userName}</h2>
+                  </div>
+                  <div className="options" ref={settingBoardRef}>
+                    <i className="fa-solid fa-ellipsis-vertical" onClick={handleSettingBoard}></i>
+                    <ul className="settings"  style={{
+                      visibility: settingBoardIsOpen ? "visible" : "hidden",
+                      opacity: settingBoardIsOpen ? 1 : 0,
+                      transform: `translateY(${settingBoardIsOpen ? '0' : '-10%'})`,
+                    }}>
+                      <li onClick={() => handleRemoveFriend(userInfo.id, receiverUser.sendTo.id)}>Remove From Friends</li>
+                      <li>view friend</li>
+                    </ul>
+                  </div>
+                </div>
+              )
+              : (
+              <div className="messages-title">
               
-            </div>
+                <h2>Wellcome to ChatNotif!</h2>
+              </div>
+            )
+              }
+            
               {receiverUser.sendTo !== ""
               ? (
                 <ul className="messages" ref={messagesRef}>
                   {messages.map((message,key) => {
                     const dateTime = new Date(message.createdAt);
-                    if(message.sender.id === receiverUser.sendTo.id || message.receiver.id === receiverUser.sendTo.id) {
+
                       return (
                         <li key={key} className={`message ${message.sender.id === userInfo.id && "me"}`}>
                           {message.messageContent}
-                          <span className="time">{dateTime.getHours()}:{dateTime.getMinutes()}</span>
+                          <span className="time">{dateTime.getHours()}:{dateTime.getMinutes().toString().padStart(2, "0")}</span>
                         </li>
                       )
-                    }
+                    
                     
                   })}
                 
@@ -213,6 +307,7 @@ const Chat = ({receiverUser}) => {
 
 Chat.propTypes = {
   receiverUser: PropTypes.any,
+  messagesState: PropTypes.any
 }
 
 export default Chat

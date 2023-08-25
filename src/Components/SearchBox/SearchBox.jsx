@@ -27,6 +27,20 @@ const SearchBox = () => {
     // useEffect(() => {
     //     console.log(userInfo)
     // })
+    const searchBoxRef = useRef(null)
+
+    const handleClickOutside = (event) => {
+        if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+            setIsSearch(false)
+        }
+      }
+    
+      useEffect(() => {
+        document.addEventListener('click', handleClickOutside);
+            return () => {
+                document.removeEventListener('click', handleClickOutside);
+            };
+      }, [])
 
     const handleSearch = async (e) => {
         let userName = ""
@@ -117,11 +131,13 @@ const SearchBox = () => {
     
 
     return (
-    <div className="search-box">
+    <div className="search-box" ref={searchBoxRef}>
 
                 <input type="text" ref={searchInput} onChange={(e) => handleSearch(e)} className="search" name="search" id="search" placeholder="Search Users"/>
                 <ul className="search-results" style={{
-                    display: isSearch ? "flex" : "none"
+                    visibility: isSearch ? "visible" : "hidden",
+                    opacity: isSearch ? 1 : 0,
+                    transform: `translateY(${isSearch ? '0' : '-10%'})`,
                 }}>
                     {
                     searchedUsers.length !== 0 

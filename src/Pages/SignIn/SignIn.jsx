@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useCallback, useEffect } from "react"
+import { useStompClientContext } from "../../Components/UserContext"
 
 import AuthService from "../../Service/AuthService"
 
 const SignIn = () => {
     const navigate = useNavigate()
+    const stompClient = useStompClientContext()
 
     const [error, setError] = useState("")
 
@@ -51,9 +53,12 @@ const SignIn = () => {
             await AuthService.SignIn(userData).then(
                 (res) => {
                     if (res.response.Success) {
-
+                        if(stompClient) {
+                            stompClient.send("/api/v1/authenticate", {}, "Signed In")
+                        }
                         navigate("/")
                         window.location.reload();
+                        
                     } else {
                         setError(res.response.Message)
                     }
