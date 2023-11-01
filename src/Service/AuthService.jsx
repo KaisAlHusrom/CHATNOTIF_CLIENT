@@ -46,10 +46,15 @@ const SignOut = async () => {
 
 }
 
-const IsLogged = () => {
+const IsLogged = async () => {
 
-    if (localStorage.getItem("user_token") && new Date(localStorage.getItem("user_token_expiration_date")) > new Date()) {
-        return true
+    if (localStorage.getItem("user_token")) 
+    {
+        if(new Date(localStorage.getItem("user_token_expiration_date")) > new Date()) {
+            return true
+        } else {
+            await SignOut()
+        }
     }
 
     return false

@@ -24,8 +24,26 @@
     background-color: #fff;
     border-radius: 15px 0 0 15px;
     border-right: 1px solid var(--mainRedColor);
-
 }
+
+
+/* @media (max-width: 768px) {
+
+    .home .container .chat-section .chats-box {
+        width: 0 !important;
+        overflow: hidden;
+        border-right: none;
+    }
+}
+
+
+@media (max-width: 992px) {
+    .home .container .chat-section .chats-box{
+        width: 25%;
+    }
+} */
+
+
 
 .home .container .chat-section .chats-box .chats-title {
     width: 100%;

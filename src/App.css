@@ -12,6 +12,7 @@ body {
 :root {
     --mainOrangeColor: #F3A325;
     --mainRedColor: #A12C2F;
+    --mainLightRedColor: #dd0007;
     --mainBlueColor: #35A3BF;
     --mainBlackColor: #1F272A;
     --mainBlurColor: rgba(250,250,250,0.15);

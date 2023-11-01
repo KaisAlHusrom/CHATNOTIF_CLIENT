@@ -1,0 +1,40 @@
+.home .container .chat-section .messages-box .messages .message {
+    background-color: var(--mainBlackColor);
+    width: fit-content;
+    padding: 10px 12px;
+    padding-right: 25px;
+    margin: 10px 8px;
+    border-radius: 8px;
+    align-self: flex-end;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 400;
+    letter-spacing: 1.2px;
+    max-width: 45%;
+    min-width: 20%;
+    position: relative;
+}
+
+
+.home .container .chat-section .messages-box .messages .me {
+    align-self: flex-start !important;
+    background-color: var(--mainRedColor);
+}
+
+.home .container .chat-section .messages-box .messages .message-content {
+    width: 90%;
+    height: 100%;
+    overflow-wrap: break-word;
+    hyphens: auto; /*add - when word contiunue in another line*/
+}
+
+.home .container .chat-section .messages-box .messages .message .time {
+    width: fit-content;
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    margin-top: 15px;
+    color: #eee;
+    display: flex;
+    align-items: center;
+}

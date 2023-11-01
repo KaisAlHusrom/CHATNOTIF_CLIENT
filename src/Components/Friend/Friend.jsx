@@ -1,32 +1,46 @@
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import emptyImage from "./../../Assets/Images/emptyImageProfile.png"
 import "./Friend.css"
 import MessageService from "../../Service/MessageService";
 import { useUserContext } from "../UserContext";
 
 import PropTypes from 'prop-types';
-const Friend = ({friend, sendToState, newMessagesState}) => {
-    const [messages, setMessages] = useState([])
-    const [newMessages, setNewMessages] = useState([])
+const Friend = ({friend, sendToState, messagesState, isWritingState}) => {
+    const {messages} = messagesState
+
+    const {sendTo, setSendTo} = sendToState
+
+    const {isWriting} = isWritingState
+
+    const [myMessages, setMyMessages] = useState(() => {
+        return messages ? messages[friend.userName] : []
+    })
+    
+      //when messages change my message will update
+    useEffect(() => {
+        setMyMessages(() => {
+            return  messages ? messages[friend.userName] : []
+        })
+    
+    }, [friend.userName, messages])
+
 
     const {userInfo} = useUserContext()
 
+    const [newMessages, setNewMessages] = useState(() => {
+        return myMessages ? myMessages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id) : []
+    })
+
     useEffect(() => {
-        const fetchMessages = async () => {
-            const allMessages = await MessageService.getMessages(userInfo.id, friend.id)
-            if (allMessages.success) {
-                setMessages(allMessages.result)
-                setNewMessages(allMessages.result.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id))
-      
-            }
-          } 
+        if (friend.id !== sendTo.id && myMessages) {
+            setNewMessages(myMessages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id))
+        }
+    }, [friend.id, myMessages, sendTo.id, userInfo.id])
 
-        fetchMessages()
 
-    }, [])
 
     const handleOpenFriendChat = async () => {
-        sendToState.setSendTo(friend)
+        setSendTo(friend)
 
         if (newMessages.length !== 0) {
             await Promise.all(newMessages.map(async message => {
@@ -45,7 +59,13 @@ const Friend = ({friend, sendToState, newMessagesState}) => {
             <img src={emptyImage} alt="profile" className="profile-image"/>
             <div className="userName-lastMessage">
                 <h6 className="user-name">{friend.userName}</h6>
-                <p className="last-message">{(messages[messages.length - 1]?.messageContent)}</p>
+                {(isWriting.some(
+                    element => element.senderId === friend.id && element.receiverId === userInfo.id
+                )) 
+                ? <p className="is-writing">Typing...</p> 
+                : <p className="last-message">{myMessages && (myMessages[myMessages.length - 1]?.messageContent)}</p>
+                }
+               
             </div>
             <div className="date-time">
                 <p className="date">
@@ -61,6 +81,7 @@ const Friend = ({friend, sendToState, newMessagesState}) => {
                 </span>
             )}
             
+            
         </li>
     )
 }
@@ -68,7 +89,8 @@ const Friend = ({friend, sendToState, newMessagesState}) => {
 Friend.propTypes = {
     friend: PropTypes.any,
     sendToState: PropTypes.any,
-    newMessagesState: PropTypes.any
+    messagesState: PropTypes.any,
+    isWritingState: PropTypes.object
   }
 
 export default Friend

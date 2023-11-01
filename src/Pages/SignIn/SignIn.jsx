@@ -77,10 +77,12 @@ const SignIn = () => {
 
 
     useEffect(() => {
-        if (AuthService.IsLogged()) {
-            navigate("/")
-            
-        }
+        AuthService.IsLogged().then(res => {
+            if (res) {
+                navigate("/")
+            }
+        })
+
          
     })
 

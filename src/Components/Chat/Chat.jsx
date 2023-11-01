@@ -2,19 +2,42 @@ import { useEffect, useRef, useState } from "react"
 import ChatImage from "../../Assets/Images/chat.png"
 import MessageService from "../../Service/MessageService"
 import UsersService from "../../Service/UsersService"
-import FriendRequestService from "../../Service/FriendRequestService"
-import { useUserContext, useStompClientContext, useFriendsContext, useNotificationsContext } from "../../Components/UserContext"
+import { useUserContext, useStompClientContext } from "../../Components/UserContext"
+import Message from "../Message/Message"
 import PropTypes from 'prop-types';
 import emptyImage from "./../../Assets/Images/emptyImageProfile.png"
+// import MenuIcon from '@mui/icons-material/Menu';
+// import AutoSizer from "react-virtualized-auto-sizer"
+// import { FixedSizeList as List } from "react-window"
 
 import "./Chat.css"
 
-const Chat = ({receiverUser, messagesState}) => {
-  const {sendTo, setSendTo} = receiverUser
+
+
+const Chat = ({receiverUser, messagesState, isWritingState}) => {
+  const {sendTo} = receiverUser
+  const {isWriting} = isWritingState
+  // const {chatsBoxOpened, setChatsBoxOpened} = chatsBoxState
   const messageInput = useRef()
   const messagesRef = useRef()
   const [settingBoardIsOpen, setSettingBoardIsOpen] = useState(false);
   const settingBoardRef = useRef(null);
+
+  const stompClient = useStompClientContext() 
+  const {userInfo} = useUserContext()
+  const {messages} = messagesState
+  const [myMessages, setMyMessages] = useState(() => {
+    return sendTo !== "" ? messages[sendTo.userName] : []
+  })
+
+  //when messages change my message will update
+  useEffect(() => {
+    setMyMessages(() => {
+      return sendTo !== "" ? messages[sendTo.userName] : []
+    })
+
+  }, [messages, sendTo])
+
 
   //close chat settings board if click outside of it.
   const handleSettingBoard = () => {
@@ -32,12 +55,7 @@ const Chat = ({receiverUser, messagesState}) => {
         };
   }, []);
 
-  const stompClient = useStompClientContext() 
-  const {userInfo} = useUserContext()
-  const { setFriends} = useFriendsContext()
-  const { setNotifications} = useNotificationsContext()
-  const [messages, setMessages] = useState([])
-  // let userMessages =  messages[sendTo.userName]
+
 
 
   useEffect(() => {
@@ -47,164 +65,85 @@ const Chat = ({receiverUser, messagesState}) => {
     }
 
     //convert the new messages to old when current chat keep open
-    let timer;
+    if (sendTo !== "") {
 
-    if (receiverUser.sendTo !== "") {
-      const convertNesMessagesToOld = async () => {
+      const convertNewMessagesToOld = async () => {
 
-        let newMessages = messages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id)
+        let newRecievedMessages = myMessages ? myMessages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id) : []
+        
+        if(newRecievedMessages.length > 0) {
 
-        await Promise.all(newMessages.map(async message => {
-              await MessageService.updateMessageStatusToOld(message.id)
-        }))
+          await Promise.all(newRecievedMessages.map(async message => {
+            await MessageService.updateMessageStatusToOld(message.id)
+          }))
+
+          if(stompClient) {
+            //when send this the myMessages will set again and the useEffect will run again but because the condition it will run once
+            stompClient.send("/api/v1/check-reading-message", {}, "Message Readed")
+          }
+
+          
+        }
+
+        
+
+        // // Compare new messages with old messages
+        // const haveMessagesChanged = !areArraysEqual(newMessages, messages);
+
+        // if (haveMessagesChanged) {
+        //     // Update the state only if the messages have changed
+        //     setMessages(newMessages);
+        //     setMyMessages(newMessages);
+        // }
+
       }
-
-      timer = setTimeout(() => {
-          convertNesMessagesToOld()
-      }, 1000)
+      convertNewMessagesToOld()
     }
 
 
-  // // Clear the timer if the chat closes or state changes
-  return () => clearTimeout(timer);
+
     
-  }, [messages])
+  }, [myMessages, sendTo, stompClient, userInfo.id]) //here chaanged if error show control 
 
   const [messageContent, setMessageContent] = useState("")
 
   //When open chat box...
   useEffect(() => {
-
      // Scroll to the bottom of the message list
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
-
-    const fetchMessages = async () => {
-      const allMessages = await MessageService.getMessages(userInfo.id, receiverUser.sendTo.id)
-      if (allMessages.success) {
-
-        setMessages(allMessages.result)
-
-      }
-    } 
-
-    
-
-
-    if (receiverUser.sendTo !== "") {
-      
-
-      fetchMessages()
-    }
-
-    if(stompClient) {
-      stompClient.connect({}, onConnected, onError)
-    }
-
   }, [receiverUser.sendTo])
 
-  const onConnected = () => {
 
-    stompClient.subscribe("/user-auth/authenticate", onAuthentication)
-
-
-    stompClient.subscribe("/user-message/send-message", onMessageSend)
-
-    stompClient.subscribe("/user-notification/send-notif", onNotifSent)
-    stompClient.subscribe("/user-notification/accept-friend", onFriendAccepted)
-    stompClient.subscribe("/user-notification/reject-friend", onFriendRejected)
-    stompClient.subscribe("/user-notification/remove-friend", onFriendRemoved)
-  }
-
-  const onError = err => {
-    console.log(err)
-  }
-
-
-
-  const onAuthentication = async () => {
-    const friends = await UsersService.GetFriends(userInfo.id)
-    setFriends(friends.result)
-
-  }
-
-
-
-  //the result when send friend request
-  const onNotifSent = async (payload) => {
-    let data = JSON.parse(payload.body)
-    if (data.success) {
-      let requests = await FriendRequestService.getUserRequests(userInfo.id)
-      setNotifications(requests.result)
-    }
-
-  }
-
-  //the result when accepted friend request
-  const onFriendAccepted = async (payload) => {
-    const data = JSON.parse(payload.body)
-    if (data.success) {
-
-      const requests = await FriendRequestService.getUserRequests(userInfo.id)
-      setNotifications(requests.result)
-
-      const friends = await UsersService.GetFriends(userInfo.id)
-      setFriends(friends.result)
-    }
-  }
-
-  const onFriendRejected = async (payload) => {
-    const data = JSON.parse(payload.body)
-    if (data.success) {
-
-
-
-      const requests = await FriendRequestService.getUserRequests(userInfo.id)
-      setNotifications(requests.result)
-      
-    }
-  }
-
-  const onFriendRemoved = async (payload) => {
-    const data = JSON.parse(payload.body)
-    if (data.success) {
-      let requests = await FriendRequestService.getUserRequests(userInfo.id)
-      setNotifications(requests.result)
-
-      const friends = await UsersService.GetFriends(userInfo.id)
-      setFriends(friends.result)
-
-      receiverUser.setSendTo("")
-    }
-  }
-
-  const onMessageSend = async (payload) => {
-    let data = JSON.parse(payload.body)
-    if (data.success) {
-      const allMessages = await MessageService.getMessages(data.result.sender.id, data.result.receiver.id)
-      if (allMessages.success) {
-        // userMessages.add(data.result)
-        setMessages(allMessages.result)
-
-        
-      }
-    }
-  }
-
-  
 
   const handleMessageChange = e => {
-    setMessageContent(e.target.value)
+    const value = e.target.value;
+    setMessageContent(value)
+    if (value !== "") {
+      stompClient.send("/api/v1/writing-message", {}, JSON.stringify({
+        message: value,
+        receiverId: sendTo.id,
+        senderId: userInfo.id
+      }))
+    } else {
+      stompClient.send("/api/v1/writing-message", {}, JSON.stringify({
+        message: " ",
+        receiverId: sendTo.id,
+        senderId: userInfo.id
+      }))
+    }
   }
 
   const handleSendMessage = async () => {
     if(stompClient) {
       if(messageContent !== "") {
-        const res = await MessageService.sendMessage(messageContent, userInfo.id, receiverUser.sendTo.id)
+        const res = await MessageService.sendMessage(messageContent, userInfo.id, sendTo.id)
         if(res.success) {
           messageInput.current.value = ""
           stompClient.send("/api/v1/send-message", {}, JSON.stringify(res))
+        }else {
+          console.log(res.error)
         }
       } 
       
@@ -216,6 +155,8 @@ const Chat = ({receiverUser, messagesState}) => {
       e.preventDefault(); // Prevent the default Enter behavior (form submission)
       handleSendMessage();    // Trigger the button click event
     }
+
+    
   }
 
 
@@ -229,14 +170,27 @@ const Chat = ({receiverUser, messagesState}) => {
     }
   }
 
+
   return (
     <div className="messages-box">
-              {receiverUser.sendTo !== ""
+              {sendTo !== ""
               ? (
                 <div className="messages-title">
+                  {/* {
+                    chatsBoxOpened && 
+                    <div className="bars">
+                    <MenuIcon />
+                    </div>
+                  } */}
                   <div className="user-info">
                     <img src={emptyImage} alt="profile" className="profile-image" />
-                    <h2>{receiverUser.sendTo.userName}</h2>
+                    <div className="name-isWriting">
+                      <h2>{sendTo.userName}</h2>
+                      {(isWriting.some(
+                                      element => element.senderId === sendTo.id && element.receiverId === userInfo.id
+                                      )) 
+                                      && <p className="is-writing">Typing...</p>}
+                    </div>
                   </div>
                   <div className="options" ref={settingBoardRef}>
                     <i className="fa-solid fa-ellipsis-vertical" onClick={handleSettingBoard}></i>
@@ -253,7 +207,12 @@ const Chat = ({receiverUser, messagesState}) => {
               )
               : (
               <div className="messages-title">
-              
+                  {/* {
+                    chatsBoxOpened && 
+                    <div className="bars">
+                    <MenuIcon />
+                    </div>
+                  } */}
                 <h2>Wellcome to ChatNotif!</h2>
               </div>
             )
@@ -262,18 +221,28 @@ const Chat = ({receiverUser, messagesState}) => {
               {receiverUser.sendTo !== ""
               ? (
                 <ul className="messages" ref={messagesRef}>
-                  {messages.map((message,key) => {
-                    const dateTime = new Date(message.createdAt);
+                  {/* <List
+                  className="messages-list"
+                  itemCount={messages.length}
+                  itemSize={9}
+                  height={150}
+                  width={150}
+                  >
+                  {
+                  ({index, style}) => (
+                      
+                        <Message style={style} key={index} message={messages[index]}/>
+                      
+                    
+                    
+                  )
+                  }
+                  </ List> */}
 
-                      return (
-                        <li key={key} className={`message ${message.sender.id === userInfo.id && "me"}`}>
-                          {message.messageContent}
-                          <span className="time">{dateTime.getHours()}:{dateTime.getMinutes().toString().padStart(2, "0")}</span>
-                        </li>
-                      )
-                    
-                    
-                  })}
+                  {
+                  myMessages && myMessages.map((message, key) => <Message  key={key} message={message}/>)
+                  }
+
                 
                 </ul>
               )
@@ -290,13 +259,15 @@ const Chat = ({receiverUser, messagesState}) => {
             {receiverUser.sendTo !== ""
             && (
               <div className="send-message">
-                <input 
+                <textarea 
+                rows={1}
+                className="message-input"
                 name="message" 
                 id="message" 
                 onChange={handleMessageChange} 
                 ref={messageInput}
                 onKeyDown={handleKeyDown} 
-                />
+                ></textarea>
                 <button onClick={handleSendMessage}>Send</button>
               </div>
             )
@@ -305,9 +276,27 @@ const Chat = ({receiverUser, messagesState}) => {
   )
 }
 
+//to clarify new messages
+  // const [newMessages, setNewMessages] = useState(() => myMessages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id))
+  // const [newMessagesIsStart, setNewMessagesIsStart] = useState(false)
+
+  // useEffect(() => {
+  //   if (sendTo === "") {
+  //     setNewMessages(myMessages.filter(message => message.status === "NEW" && message.sender.id !== userInfo.id))
+  //   }
+
+  //   // Find if there's a new message with "NEW" status
+  //   const hasNewMessage = myMessages.some(message => message.status === "NEW" && message.sender.id !== userInfo.id);
+
+  //   // Update newMessagesIsStart state based on the presence of new messages
+  //   setNewMessagesIsStart(hasNewMessage);
+  // }, [messages]);
+
+
 Chat.propTypes = {
   receiverUser: PropTypes.any,
-  messagesState: PropTypes.any
+  messagesState: PropTypes.any,
+  isWritingState: PropTypes.object,
 }
 
 export default Chat

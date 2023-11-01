@@ -62,7 +62,11 @@ const SignUp = () => {
     }
 
     useEffect(() => {
-        AuthService.IsLogged() && navigate("/")
+        AuthService.IsLogged().then(res => {
+            if (res) {
+                navigate("/")
+            }
+        })
         
     })
 

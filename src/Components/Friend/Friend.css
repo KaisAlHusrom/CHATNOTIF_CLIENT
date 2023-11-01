@@ -36,11 +36,20 @@
     color: #777;
     font-size: 14px;
     text-transform: none !important;
+    width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .connected-friend:hover .userName-lastMessage .last-message {
     color: #aaa;
 
+}
+
+.connected-friend .userName-lastMessage .is-writing {
+    color: var(--mainRedColor) !important;
+    font-weight: bold;
 }
 
 .connected-friend  .date-time {
@@ -66,6 +75,8 @@
     justify-content: center;
     align-items: center;
 }
+
+
 
 .unconnected-friend {
     opacity: 0.7;

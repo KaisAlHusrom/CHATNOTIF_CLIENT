@@ -1,15 +1,35 @@
 import "./Header.css"
 import { NavLink, useNavigate } from "react-router-dom"
 import AuthService from "../../Service/AuthService"
-import {   useState } from "react"
+import {   useEffect, useState } from "react"
 import { NotificationSection, SearchBox } from "../../Components"
 import { useStompClientContext, useUserContext } from "../../Components/UserContext"
 
 const Header = () => {
   const {userInfo} = useUserContext()
   const navigate = useNavigate()
-  const [logged] = useState(() => {
-    return localStorage.getItem("user_token") && new Date(localStorage.getItem("user_token_expiration_date")) > new Date() ?  true : false
+  const [logged, setLogged] = useState(null)
+
+  useEffect(() => {
+    const checkIfLogged = async () => {
+      if(localStorage.getItem("user_token") ) {
+        if (new Date(localStorage.getItem("user_token_expiration_date")) > new Date()) {
+          setLogged(true)
+        }
+        else {
+          await AuthService.SignOut()
+          if(stompClient) {
+            stompClient.send("/api/v1/authenticate", {}, "Signed Out")
+          }
+          setLogged(false)
+        }
+      } else {
+        setLogged(false)
+      }
+
+    }
+
+    checkIfLogged()
   })
 
   const stompClient = useStompClientContext()
