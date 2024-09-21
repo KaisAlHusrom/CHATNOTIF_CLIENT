@@ -213,7 +213,7 @@ const Chat = ({receiverUser, messagesState, isWritingState}) => {
                     <MenuIcon />
                     </div>
                   } */}
-                <h2>Wellcome to ChatNotif!</h2>
+                <h2>Wellcome to WhatsApp!</h2>
               </div>
             )
               }
@@ -249,7 +249,8 @@ const Chat = ({receiverUser, messagesState, isWritingState}) => {
               : (
                 <div className="no-body">
                   <img src={ChatImage} alt="chat" className="chat-image"/>
-                  <h2><span className="colored-logo">C</span>hat<span className="colored-logo">N</span>otif</h2>
+                  <h2><span className="colored-logo">W</span>hats<span className="colored-logo">App</span></h2>
+
                   <p className="greeting">
                     You can talk with everybody you want
                   </p>

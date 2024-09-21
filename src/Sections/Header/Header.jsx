@@ -51,7 +51,7 @@ const Header = () => {
     <header>
         <div className="container">
             <div className="logo">
-                <h1><span className="colored-logo">C</span>hat<span className="colored-logo">N</span>otif</h1>
+                <h1><span className="colored-logo">W</span>hats<span className="colored-logo">App</span></h1>
             </div>
             {logged && <SearchBox />}
             {!logged
